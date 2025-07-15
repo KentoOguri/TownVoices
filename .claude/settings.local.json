@@ -8,7 +8,8 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(npx prisma db seed:*)",
       "Bash(code:*)",
-      "Bash(npx prisma migrate reset:*)"
+      "Bash(npx prisma migrate reset:*)",
+      "Bash(npx ts-node:*)"
     ],
     "deny": []
   }

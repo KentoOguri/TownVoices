@@ -193,17 +193,6 @@ const MapView = memo(({ comments, onMapClick, googleMapsApiKey, onMapLoad, onCom
           </OverlayView>
         ))}
 
-        {hoveredComment && (
-          <InfoWindow
-            position={{ lat: hoveredComment.latitude, lng: hoveredComment.longitude }}
-            onCloseClick={() => setHoveredComment(null)}
-          >
-            <div className="p-2 max-w-xs">
-              <p className="text-sm font-medium">{hoveredComment.category.name}</p>
-              <p className="text-xs text-gray-600 line-clamp-2">{hoveredComment.content}</p>
-            </div>
-          </InfoWindow>
-        )}
       </GoogleMap>
     </LoadScript>
   )
