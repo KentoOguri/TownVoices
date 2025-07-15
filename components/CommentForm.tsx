@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, MapPin } from 'lucide-react'
+import { X, Send } from 'lucide-react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Category } from '@/types'
@@ -10,11 +10,12 @@ interface CommentFormProps {
   latitude: number
   longitude: number
   onClose: () => void
+  initialCategoryId?: string
 }
 
-export default function CommentForm({ latitude, longitude, onClose }: CommentFormProps) {
+export default function CommentForm({ latitude, longitude, onClose, initialCategoryId }: CommentFormProps) {
   const [content, setContent] = useState('')
-  const [categoryId, setCategoryId] = useState('')
+  const [categoryId, setCategoryId] = useState(initialCategoryId || '')
   const queryClient = useQueryClient()
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -63,15 +64,6 @@ export default function CommentForm({ latitude, longitude, onClose }: CommentFor
 
         <form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-              <MapPin className="w-4 h-4" />
-              <span>
-                緯度: {latitude.toFixed(6)}, 経度: {longitude.toFixed(6)}
-              </span>
-            </div>
-          </div>
-
-          <div className="mb-4">
             <label htmlFor="category" className="block text-sm font-medium mb-2">
               カテゴリー
             </label>
@@ -117,8 +109,9 @@ export default function CommentForm({ latitude, longitude, onClose }: CommentFor
             <button
               type="submit"
               disabled={createCommentMutation.isPending}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
+              <Send className="w-4 h-4" />
               {createCommentMutation.isPending ? '投稿中...' : '投稿する'}
             </button>
           </div>

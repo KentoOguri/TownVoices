@@ -1,15 +1,18 @@
 'use client'
 
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api'
-import { useState, useCallback, memo } from 'react'
+import { GoogleMap, LoadScript, Marker, InfoWindow, OverlayView } from '@react-google-maps/api'
+import { useState, useCallback, memo, useEffect } from 'react'
 import { Comment } from '@/types'
 import CommentDetail from './CommentDetail'
-import { MessageCircle } from 'lucide-react'
+import CommentMarker from './CommentMarker'
+import { MessageCircle, Users, MessageSquare, GraduationCap, Heart, Home, MoreHorizontal } from 'lucide-react'
 
 interface MapViewProps {
   comments: Comment[]
   onMapClick: (lat: number, lng: number) => void
   googleMapsApiKey: string
+  onMapLoad?: (map: google.maps.Map) => void
+  onCommentSelect?: (comment: Comment) => void
 }
 
 const mapContainerStyle = {
@@ -22,19 +25,86 @@ const defaultCenter = {
   lng: 139.7671
 }
 
-const MapView = memo(({ comments, onMapClick, googleMapsApiKey }: MapViewProps) => {
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
+const MapView = memo(({ comments, onMapClick, googleMapsApiKey, onMapLoad, onCommentSelect }: MapViewProps) => {
   const [hoveredComment, setHoveredComment] = useState<Comment | null>(null)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null)
+
+  // 位置情報の取得と監視
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError('位置情報がサポートされていません')
+      return
+    }
+
+    const successCallback = (position: GeolocationPosition) => {
+      const newLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      }
+      setUserLocation(newLocation)
+      setLocationError(null)
+      
+      // 初回取得時は地図を現在位置に移動
+      if (mapInstance && !userLocation) {
+        mapInstance.setCenter(newLocation)
+        mapInstance.setZoom(14)
+      }
+    }
+
+    const errorCallback = (error: GeolocationPositionError) => {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          setLocationError('位置情報の利用が拒否されました')
+          break
+        case error.POSITION_UNAVAILABLE:
+          setLocationError('位置情報が利用できません')
+          break
+        case error.TIMEOUT:
+          setLocationError('位置情報の取得がタイムアウトしました')
+          break
+        default:
+          setLocationError('位置情報の取得に失敗しました')
+          break
+      }
+    }
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    }
+
+    // 初回位置取得
+    navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options)
+
+    // リアルタイム位置監視
+    const watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, options)
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId)
+    }
+  }, [mapInstance, userLocation])
 
   const onLoad = useCallback((map: google.maps.Map) => {
-    const bounds = new window.google.maps.LatLngBounds()
-    if (comments.length > 0) {
-      comments.forEach(comment => {
-        bounds.extend({ lat: comment.latitude, lng: comment.longitude })
-      })
-      map.fitBounds(bounds)
+    setMapInstance(map)
+    
+    // 位置情報が既に取得されている場合は現在位置を中心に表示
+    if (userLocation) {
+      map.setCenter(userLocation)
+      map.setZoom(14)
+    } else {
+      // 位置情報がまだ取得されていない場合はデフォルト位置
+      map.setCenter(defaultCenter)
+      map.setZoom(12)
     }
-  }, [comments])
+    
+    // 親コンポーネントに地図インスタンスを渡す
+    if (onMapLoad) {
+      onMapLoad(map)
+    }
+  }, [userLocation, onMapLoad])
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
@@ -88,25 +158,42 @@ const MapView = memo(({ comments, onMapClick, googleMapsApiKey }: MapViewProps) 
         onClick={handleMapClick}
         options={mapOptions}
       >
-        {comments.map((comment) => (
+        {userLocation && (
           <Marker
-            key={comment.id}
-            position={{ lat: comment.latitude, lng: comment.longitude }}
-            onClick={() => setSelectedComment(comment)}
-            onMouseOver={() => setHoveredComment(comment)}
-            onMouseOut={() => setHoveredComment(null)}
+            position={userLocation}
             icon={{
-              path: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z',
-              fillColor: getCategoryColor(comment.category.name),
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: '#4285F4',
               fillOpacity: 1,
               strokeColor: '#fff',
-              strokeWeight: 2,
-              scale: 1.5,
+              strokeWeight: 3,
+              scale: 8,
             }}
+            title="現在位置"
+            zIndex={1000}
           />
+        )}
+
+        {comments.map((comment) => (
+          <OverlayView
+            key={comment.id}
+            position={{ lat: comment.latitude, lng: comment.longitude }}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            getPixelPositionOffset={(width, height) => ({
+              x: -(width / 2),
+              y: -(height / 2)
+            })}
+          >
+            <CommentMarker
+              comment={comment}
+              onMouseOver={() => setHoveredComment(comment)}
+              onMouseOut={() => setHoveredComment(null)}
+              onClick={() => onCommentSelect && onCommentSelect(comment)}
+            />
+          </OverlayView>
         ))}
 
-        {hoveredComment && !selectedComment && (
+        {hoveredComment && (
           <InfoWindow
             position={{ lat: hoveredComment.latitude, lng: hoveredComment.longitude }}
             onCloseClick={() => setHoveredComment(null)}
@@ -115,15 +202,6 @@ const MapView = memo(({ comments, onMapClick, googleMapsApiKey }: MapViewProps) 
               <p className="text-sm font-medium">{hoveredComment.category.name}</p>
               <p className="text-xs text-gray-600 line-clamp-2">{hoveredComment.content}</p>
             </div>
-          </InfoWindow>
-        )}
-
-        {selectedComment && (
-          <InfoWindow
-            position={{ lat: selectedComment.latitude, lng: selectedComment.longitude }}
-            onCloseClick={() => setSelectedComment(null)}
-          >
-            <CommentDetail comment={selectedComment} />
           </InfoWindow>
         )}
       </GoogleMap>

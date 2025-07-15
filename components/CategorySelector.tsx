@@ -2,6 +2,7 @@
 
 import { Category } from '@/types'
 import { useRef, useEffect } from 'react'
+import { Users, MessageSquare, GraduationCap, Heart, Home, MoreHorizontal } from 'lucide-react'
 
 interface CategorySelectorProps {
   categories: Category[]
@@ -15,6 +16,18 @@ export default function CategorySelector({
   onCategorySelect 
 }: CategorySelectorProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const getCategoryIcon = (categoryName: string) => {
+    const icons: { [key: string]: React.ElementType } = {
+      'みんなの声': Users,
+      'ひとこと': MessageSquare,
+      '教育': GraduationCap,
+      '福祉': Heart,
+      '生活': Home,
+      'その他': MoreHorizontal
+    }
+    return icons[categoryName] || icons['その他']
+  }
 
   const getCategoryColor = (categoryName: string, isSelected: boolean) => {
     const baseColors: { [key: string]: { bg: string, text: string } } = {
@@ -45,27 +58,32 @@ export default function CategorySelector({
   }, [selectedCategory])
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-30 z-10">
       <div 
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3"
+        className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 md:py-3 sm:py-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            data-category-id={category.id}
-            onClick={() => onCategorySelect(category.id)}
-            className={`
-              px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap
-              transition-all duration-200 transform
-              ${getCategoryColor(category.name, selectedCategory === category.id)}
-              ${selectedCategory === category.id ? 'scale-105 shadow-md' : 'hover:scale-105'}
-            `}
-          >
-            {category.name}
-          </button>
-        ))}
+        {categories.map((category) => {
+          const Icon = getCategoryIcon(category.name)
+          return (
+            <button
+              key={category.id}
+              data-category-id={category.id}
+              onClick={() => onCategorySelect(category.id)}
+              className={`
+                px-3 py-1 md:px-3 md:py-1 sm:px-2 sm:py-0.5 rounded-full font-medium 
+                text-sm md:text-sm sm:text-xs whitespace-nowrap
+                transition-all duration-200 transform flex items-center gap-1.5
+                ${getCategoryColor(category.name, selectedCategory === category.id)}
+                ${selectedCategory === category.id ? 'scale-105 shadow-md' : 'hover:scale-105'}
+              `}
+            >
+              <Icon className="w-3 h-3 md:w-3 md:h-3 sm:w-2.5 sm:h-2.5" />
+              {category.name}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
