@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  icon      String?
+  email     String     @unique
+  createdAt DateTime   @default(now())
+  comments  Comment[]
+  reactions Reaction[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  comments Comment[]
+}
+
+model Comment {
+  id         String     @id @default(cuid())
+  content    String
+  latitude   Float
+  longitude  Float
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime   @default(now())
+  reactions  Reaction[]
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+}

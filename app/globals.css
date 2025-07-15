@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* スクロールバーを隠す */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Google Maps のUI要素を非表示 */
+.gm-style .gm-style-cc {
+  display: none !important;
+}
+
+.gm-style .gm-style-mtc {
+  display: none !important;
+}
+
+.gm-style .gmnoprint {
+  display: none !important;
+}
+
+.gm-style .gm-bundled-control {
+  display: none !important;
+}
+
+.gm-style [title="Google マップでこの地域を開きます（新しいウィンドウが開きます）"] {
+  display: none !important;
+}
+
+.gm-style a[href^="https://maps.google.com/maps"] {
+  display: none !important;
+}
+
+.gm-style button[title="キーボード ショートカット"] {
+  display: none !important;
+}
