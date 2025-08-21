@@ -1,0 +1,25 @@
+name: "ユーザーストーリー"
+description: "ユーザーストーリーの受入基準を定義"
+body:
+  - type: textarea
+    attributes:
+      label: "ユーザーストーリー概要"
+      placeholder: "営業マネージャーとして、契約満了をメールで知らせたい。
+      顧客は保証を途切れさせることがなく、私たちは売り時を逃すことがなくなるため。"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "受入基準"
+      placeholder: "- [ ] 完了条件1\n- [ ] 完了条件2"
+
+  - type: textarea
+    attributes:
+      label: "関連イシュー"
+      placeholder: "#123"
+
+  - type: textarea
+    attributes:
+      label: "備考"
+      placeholder: "その他の情報"
