@@ -3,7 +3,7 @@ description: "ユーザーストーリーの受入基準を定義"
 body:
   - type: textarea
     attributes:
-      label: "ユーザーストーリー概要"
+      label: "概要（ユーザーストーリー）"
       placeholder: "営業マネージャーとして、契約満了をメールで知らせたい。
       顧客は保証を途切れさせることがなく、私たちは売り時を逃すことがなくなるため。"
     validations:
@@ -16,7 +16,7 @@ body:
 
   - type: textarea
     attributes:
-      label: "関連イシュー"
+      label: "PR"
       placeholder: "#123"
 
   - type: textarea
